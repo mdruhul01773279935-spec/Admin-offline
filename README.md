@@ -16,7 +16,7 @@ Friend:  "hey, are you there?"
                 ▼
       this bot (running on your phone via Termux)
                 │  • are you away? (no msg from you in this chat for X min)
-                │  • cooldown OK? (no auto-reply in the last Y min)
+                │  • send a fresh offline message for each text
                 │  • varied local reply (AI optional)
                 ▼
       sendMessage(business_connection_id=…)
@@ -39,12 +39,12 @@ Telegram itself knows that. But there's a solid trick:
 - If you **sent a message in a chat within the last `OWNER_ACTIVE_MINUTES`**
   (default 30) → you're "online" there → the bot stays silent.
 - Otherwise you're treated as away → it auto-replies.
-- `REPLY_COOLDOWN_MINUTES` (default 120) caps it at **one auto-reply per chat
-  per 2 hours**, so it never spams.
+- `REPLY_COOLDOWN_MINUTES=0` (default) sends a fresh, varied offline reply to
+  **every incoming text message**. Set this above zero if you want a cooldown.
 
 Want true presence-based detection? Telegram's built-in *Business → Away
 Messages* has an "only if offline" switch (needs Telegram Premium) — but it
-can only send one fixed text. Many people run just this bot instead.
+can only send one fixed text. This bot can choose a different local wording for each message.
 
 ## What if my mobile data is off? 📵
 
@@ -217,7 +217,7 @@ kill it.
 | `GEMINI_API_KEY` + `GEMINI_MODEL` | `gemini-2.5-flash` | Google Gemini (free key) |
 | `AUTO_REPLY_TEMPLATE` | blank | Optional custom fixed reply; blank = varied templates |
 | `OWNER_ACTIVE_MINUTES` | `30` | Silent this long in a chat → "offline" |
-| `REPLY_COOLDOWN_MINUTES` | `120` | Max one auto-reply per chat per this |
+| `REPLY_COOLDOWN_MINUTES` | `0` | `0` = reply to each text; positive value = minutes between replies |
 | `HEARTBEAT_PORT` | `0` (off) | Port for the phone's alive-pings (needs a secret) |
 | `HEARTBEAT_SECRET` | — | Random string; required to enable the heartbeat |
 | `HEARTBEAT_TIMEOUT_SECONDS` | `30` | No ping this long → presume phone offline |
@@ -270,7 +270,7 @@ No Gemini key is needed: the Render configuration sets `AI_PROVIDER=none`, which
 |---|---|
 | Bot never replies in my chats | Check step 4: bot connected, **Reply** right enabled, chat included in access |
 | Replies even when I'm online | Raise `OWNER_ACTIVE_MINUTES`; make sure you actually *send* a message in that chat (typing alone doesn't count) |
-| Replies too often | Raise `REPLY_COOLDOWN_MINUTES` |
+| Replies too often | Raise `REPLY_COOLDOWN_MINUTES` above `0` |
 | AI answers weird / wrong language | It mirrors the friend's language by design; tune the prompt in `ai_reply.py` |
 | Termux bot stopped after phone sleep | `termux-wake-lock`, disable battery optimization for Termux, use Termux:Boot |
 | `Could not reach Telegram` | Wrong `BOT_TOKEN`, or no internet |

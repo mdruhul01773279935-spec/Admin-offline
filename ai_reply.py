@@ -18,14 +18,21 @@ AI_TIMEOUT_SECONDS = 25
 # A pool of short, neutral away messages. They are formatted locally and do
 # not depend on or inspect the incoming message.
 LOCAL_REPLIES = (
-    "{owner} is offline right now. He'll reply when he's back.",
-    "{owner} isn't available at the moment. He'll get back to you later.",
-    "{owner} is away from Telegram right now. He'll reply when he can.",
-    "Hey! {owner} can't reply just now, but he'll message you when he's back.",
-    "{owner} is currently offline. Please leave a message and he'll get back to you.",
-    "{owner} isn't online at the moment. He'll respond as soon as he's available.",
-    "Just a note: {owner} is away right now and will reply later.",
-    "{owner} is away from his phone right now. He'll reply when he's available.",
+    "{owner} is offline right now 😴 He'll reply when he's back online.",
+    "{owner} is currently offline 📵 He'll message you when he comes online.",
+    "{owner} is offline at the moment 🌙 He'll get back to you when he's online again.",
+    "{owner} is offline now 📴 He'll respond as soon as he comes online.",
+    "{owner} is offline for now ⏳ He'll reply when he's back online.",
+    "{owner} is offline right now 💤 He'll answer once he's online again.",
+    "{owner} is currently offline 🌐 He'll reply when he returns online.",
+    "{owner} is offline at present 📱 He'll get back to you when he comes online.",
+    "{owner} is offline right now 🔕 He'll message you when he's back online.",
+    "{owner} is offline at the moment ✨ He'll respond when he gets online.",
+    "{owner} is offline for now 🌙 He'll reply as soon as he's back online.",
+    "{owner} is offline 📴 He'll get back to you when he's online again.",
+    "{owner} is offline right now 📡 He'll answer when he comes online.",
+    "{owner} is currently offline 💤 He'll reply once he's back online.",
+    "{owner} is offline at the moment ⏰ He'll message you when he's online again.",
 )
 
 DEFAULT_AUTO_REPLY_TEMPLATE = (
@@ -115,8 +122,8 @@ def _gemini_reply(history, owner_name: str):
         return None
 
 
-def _local_reply(owner_name: str) -> str:
-    """Pick one of the varied templates entirely on this device/server."""
+def _local_reply(owner_name: str, history=None) -> str:
+    """Pick a varied local template, avoiding the previous bot reply."""
     # Respect an explicitly customized template. The shipped default is
     # treated as unset so users get the requested varied wording.
     template = cfg.AUTO_REPLY_TEMPLATE
@@ -127,7 +134,15 @@ def _local_reply(owner_name: str) -> str:
             return template.format(owner=owner_name)
         except (KeyError, IndexError):
             return template
-    return random.choice(LOCAL_REPLIES).format(owner=owner_name)
+
+    previous_reply = next(
+        (text for role, text in reversed(history or []) if role == "us"), None
+    )
+    choices = [
+        message for message in LOCAL_REPLIES
+        if message.format(owner=owner_name) != previous_reply
+    ]
+    return random.choice(choices or list(LOCAL_REPLIES)).format(owner=owner_name)
 
 
 def generate_reply(history, owner_name: str) -> str:
@@ -144,4 +159,4 @@ def generate_reply(history, owner_name: str) -> str:
         if text:
             return text[:MAX_REPLY_CHARS]
 
-    return _local_reply(owner_name)[:MAX_REPLY_CHARS]
+    return _local_reply(owner_name, history)[:MAX_REPLY_CHARS]

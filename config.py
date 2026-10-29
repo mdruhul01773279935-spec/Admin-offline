@@ -71,7 +71,7 @@ class Config:
         # "Offline" = you have not sent a message in that chat for N minutes.
         self.OWNER_ACTIVE_MINUTES = _int("OWNER_ACTIVE_MINUTES", 30)
         # At most one auto-reply per chat per N minutes (anti-spam).
-        self.REPLY_COOLDOWN_MINUTES = _int("REPLY_COOLDOWN_MINUTES", 120)
+        self.REPLY_COOLDOWN_MINUTES = _int("REPLY_COOLDOWN_MINUTES", 0)
 
         # ---- phone heartbeat (optional) -------------------------------
         # When the bot runs on a DIFFERENT machine than your phone, the phone

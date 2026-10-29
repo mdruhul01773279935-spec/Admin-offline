@@ -40,8 +40,13 @@ ALLOWED_UPDATES = ["business_connection", "business_message", "message"]
 # Set in main(): the bot's own user id (to recognise heartbeat pings).
 _me_id = 0
 
+_cooldown_help = (
+    "I'll choose a different offline reply for every incoming text message."
+    if cfg.REPLY_COOLDOWN_MINUTES <= 0
+    else f"I reply at most once per chat every {cfg.REPLY_COOLDOWN_MINUTES} minutes."
+)
 HELP_TEXT = (
-    "🌙 *Away-reply bot*\n\n"
+    f"🌙 Hello, {cfg.OWNER_NAME}! *Away-reply bot*\n\n"
     "I reply to your friends automatically while you are offline.\n\n"
     "Commands:\n"
     "/away on | off — turn auto-replies on or off\n"
@@ -49,7 +54,7 @@ HELP_TEXT = (
     "/status — show current state\n\n"
     "How I decide you are offline: if you have not sent a message in a chat "
     f"for {cfg.OWNER_ACTIVE_MINUTES} minutes, I consider you away there.\n"
-    f"At most one auto-reply per chat per {cfg.REPLY_COOLDOWN_MINUTES} minutes."
+    f"{_cooldown_help}"
 )
 
 
@@ -84,7 +89,7 @@ def status_text(state: State) -> str:
     active = sum(1 for c in conns.values() if c.get("is_enabled"))
 
     if cfg.AI_PROVIDER == "none":
-        ai = "none (fixed template)"
+        ai = "none (varied local replies; private)"
     elif cfg.OPENAI_API_KEY:
         ai = f"OpenAI-compatible ({cfg.OPENAI_MODEL})"
     elif cfg.GEMINI_API_KEY:
@@ -107,12 +112,18 @@ def status_text(state: State) -> str:
         else:
             hb_line = f"Phone heartbeat: ok (last seen {int(age_sec)} sec ago)"
 
+    cooldown_line = (
+        "Auto-reply cooldown: off (reply on every incoming text message)\n"
+        if cfg.REPLY_COOLDOWN_MINUTES <= 0
+        else f"Auto-reply cooldown: {cfg.REPLY_COOLDOWN_MINUTES} min per chat\n"
+    )
     return (
+        f"{cfg.OWNER_NAME}, here's your status:\n"
         f"Away auto-replies: {away}\n"
         f"Connected business accounts: {active}\n"
         f"You count as 'offline' after {cfg.OWNER_ACTIVE_MINUTES} min of silence "
         f"in a chat\n"
-        f"Auto-reply cooldown: {cfg.REPLY_COOLDOWN_MINUTES} min per chat\n"
+        f"{cooldown_line}"
         f"{hb_line}\n"
         f"Smart replies: {ai}\n"
         f"Owner id: {state.owner_id or '(not bound yet - send /start)'}"
